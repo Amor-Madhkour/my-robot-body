@@ -19,7 +19,7 @@ The structure is the following:
 
 
 
-### EXPERIMENTS
+## EXPERIMENTS
 contains a reference to all the experiments performed using this framework.
 Within each experiment folder you can find documents on the setup and results such as
 - questionnaires 

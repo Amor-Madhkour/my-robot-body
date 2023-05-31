@@ -1,4 +1,4 @@
-# Strings
+# My (Robot) Body
 
 General purpose system for digital remote control of social robots. 
 The three main components are: 

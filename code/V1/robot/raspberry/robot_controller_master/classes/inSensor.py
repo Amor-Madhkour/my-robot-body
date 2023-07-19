@@ -3,27 +3,27 @@ from utils.util_methods import parse_serial_message
 from configs.esps.esp_types import ESP_CHANNEL_TYPE
 
 
-# class used to handle the relay of messages from controller
-# save its IP and PORT, and respond
-class EspChannel:
+# class used to handle the relay of messages from hardware from serial
+class inSensor:
 
     def __init__(self, ip):
 
+        #self.serial_value = serial_value
         self.channel_type = None
-
         self.ip = ip
 
     def on_esp_msg_rcv(self, string_msg):
         pass
+    
 
 
-class SingleValueEspChannel(EspChannel):
+class InsensorValueChannel(inSensor):
 
-    def __init__(self, ip, esp_value):
-        super(SingleValueEspChannel, self).__init__(ip)
+    def __init__(self, ip, serial_value):
+        super(InsensorValueChannel, self).__init__(ip)
 
         # the channel contains a single esp value.
-        self.esp_value = esp_value
+        self.esp_value = serial_value
 
         self.channel_type = ESP_CHANNEL_TYPE.SINGLE_VALUE
 
@@ -37,10 +37,10 @@ class SingleValueEspChannel(EspChannel):
         self.esp_value.on_msg_received(string_msg)
 
 
-class MultiValueEspChannel(EspChannel):
+class InsensorMultiValueChannel(inSensor):
 
     def __init__(self, ip):
-        super(MultiValueEspChannel, self).__init__(ip)
+        super(InsensorMultiValueChannel, self).__init__(ip)
 
         # the channel contains a number of "esp values" that are the values
         # that come from the ESP and need to be sent to Arduino after a processing
@@ -49,12 +49,12 @@ class MultiValueEspChannel(EspChannel):
 
         self.channel_type = ESP_CHANNEL_TYPE.MULTI_VALUE
 
-    def add_esp_value(self, esp_value):
+    def add_esp_value(self, serial_value):
         # this overrides any ESP_VALUE with the same key
-        self.esp_values[esp_value.esp_value_type.key] = esp_value
+        self.esp_values[serial_value.serial_value_type.key] = serial_value
 
-    def remove_esp_value(self, esp_value_key):
-        del self.esp_values[esp_value_key]
+    def remove_esp_value(self, serial_value_key):
+        del self.esp_values[serial_value_key]
 
     def on_esp_msg_rcv(self, string_msg):
         # called when a UDP msg is received from ESP.
@@ -69,4 +69,4 @@ class MultiValueEspChannel(EspChannel):
         # print(f"[MultiValueEspChannel][on_esp_msg_rcv] - ip: {self.ip} - messages: '{all_key_val_msgs}'")
 
         for msg in all_key_val_msgs:
-            self.esp_values[msg.key].on_msg_received(msg.value)
+            self.serial_values[msg.key].on_msg_received(msg.value)

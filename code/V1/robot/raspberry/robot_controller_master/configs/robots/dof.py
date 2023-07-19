@@ -53,3 +53,10 @@ class DofName(Enum):
     SHOULDER = Dof("SS", -1, 1)
     ELBOW = Dof("SE", -1, 1)
     CLAW = Dof("SC", -1, 1)
+
+
+    # --- Room
+    S1 = Dof("S1", -1, 1)
+    S2 = DofInt("S2", 0, 255)
+    S3 = DofInt("S3", -3, 3)
+    S4 = DofInt("S4", -3, 3)

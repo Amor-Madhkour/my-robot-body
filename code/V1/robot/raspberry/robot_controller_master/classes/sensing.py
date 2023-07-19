@@ -1,4 +1,3 @@
-
 import time
 from subprocess import call
 from classes.serial_channel import SerialChannel
@@ -15,11 +14,11 @@ DEFAULT_SERIAL_ELAPSED = 0.005
 
 
 def quit_program():
-    print("[CONTROL]-----------QUIT")
+    print("[Sensing]-----------QUIT")
     quit()
 
 
-class Control:
+class Sensing:
     def __init__(self,
                  robot,
                  path_to_restart):
@@ -41,7 +40,8 @@ class Control:
         }
 
         # -- SERIAL (with Arduino)
-        # there is ONE SERIAL CHANNEL for every Arduino on the Robot.
+        #
+        # there is ONE SERIAL CHANNEL for every micro .
         # it's a STRING-SERIALCHANNEL dict, where the STRING is the SERIAL PORT of that channel
         self.SERIAL_CHANNELS = dict()
 
@@ -139,14 +139,14 @@ class Control:
     #     self.ESP_CHANNELS[new_esp_channel.ip] = new_esp_channel
 
     def setup(self):
-        print(f"[CONTROL][SETUP] ---------------------------------------------- BEGIN")
+        print(f"[Sensing][SETUP] ---------------------------------------------- BEGIN")
         # 1:
         self.NETWORKING_CHANNEL.setup_udp(self.priority_responses)
         # 2:
         for serial_channel in self.SERIAL_CHANNELS.values():
             serial_channel.setup_serial()
 
-        print(f"[CONTROL][SETUP] ---------------------------------------------- COMPLETE\n")
+        print(f"[Sensing][SETUP] ---------------------------------------------- COMPLETE\n")
 
     # ------------------------------------------------------------------------------------------ LOOP
     def get_esp_signals(self):
@@ -197,21 +197,7 @@ class Control:
 
                 # remove the msg delimiter at the end of the MSG
                 if msg[-1] == MSG_DELIMITER:
-                    msg = msg[:-1]
-
-                serial_channel.write_serial(msg)
-
-    def read_serial(self):
-        # read all there is to read, if any
-        # update serial time only if something was read
-        for serial_channel in self.SERIAL_CHANNELS.values():
-            while True:
-                line = serial_channel.read_serial_non_blocking()
-                if line is not None:
-                    # print(line)
-                    pass
-                else:
-                    break
+                    msg = msg[:-1]                     break
 
     def serial_communication(self):
         # Raspberry and Arduino need to negotiate the HALF-DUPLEX serial channel.
@@ -240,7 +226,9 @@ class Control:
 
         # 1
         # print(f"------GET ESP SIGNALS")
-        self.get_esp_signals()
+        #self.get_esp_signals()
+        
+        self.read_serial()
         # print()
 
         # 2
@@ -252,7 +240,7 @@ class Control:
     # -- ESP PRIORITY MESSAGES
     #
     def restart_program(self):
-        print("[CONTROL]-----------RESTARTING")
+        print("[Sensing]-----------RESTARTING")
         self.cleanup()
         time.sleep(1)
         rc = call(self.path_to_restart)

@@ -46,7 +46,6 @@ def get_key_value_from_msg(string_msg):
 def pass_through(x):
     return x
 
-
 def parse_serial_message(msg, meth=get_key_value):
     # when receiving a message from serial,
     # parse it according to the MSG_DELIMITER to get individual key-value messages

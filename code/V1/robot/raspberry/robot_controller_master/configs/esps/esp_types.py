@@ -10,6 +10,8 @@ from enum import Enum
 class ESP_CHANNEL_TYPE(Enum):
     SINGLE_VALUE=0
     MULTI_VALUE=1
+    AGGREGATIONE_VALUE=2
+    PASS_THROGHT=3
 
 
 class ESP_VALUE_TYPE_KEYS(Enum):
@@ -27,7 +29,6 @@ class EspValueType:
     def __init__(self, key, channel_type, min_in, max_in):
 
         self.key = key
-
         self.channel_type = channel_type
 
         # the value coming from ESP is in this value range

@@ -32,7 +32,7 @@ RASP_AKNOWLEDGE = b"OK"
 # - ESP-TO-RASP MESSAGES
 # ESP presentation MSG
 # the message received when esps are presenting themselves
-esp_presentation_msg = "hallo"
+esp_presentation_msg = "hello"
 #
 # PRIORITY UDP MESSAGES: messages coming from socket COMM that have custom responses
 net_reset_msg = "RESET"

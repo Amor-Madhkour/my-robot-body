@@ -5,12 +5,11 @@ from utils.util_methods import get_key_value_string
 # wrapper for a SINGLE VALUE coming from and ESP.
 # Each type of value has its own processing for when the value is received,
 # which will convert the value from the one received from unity/arduino to the one to be sent to Unity/Arduino
-class EspValue:
-
-    def __init__(self, esp_value_type, dof):
+class onGoingValue:
+##############################################################################################################CLasse che forse è da togliere
+    def __init__(self, esp_value_type, sensor_Dof):
 
         self.esp_value_type = esp_value_type
-
         # this is the value that is updated when new setpoint is received from UNITY
         # and that is sent to ARDUINO.
         self.current_value = 0
@@ -19,31 +18,8 @@ class EspValue:
         self.last_sent_value = 0
 
         self.slope = None
-        self.dof = None
-        self.dof_name = None
-        self.set_dof(dof)
 
-    def set_dof(self, dof_name):
-        self.dof = dof_name.value
-        self.dof_name = dof_name
-        # parameters of the mapping function
-        self.slope = (self.dof.max_val - self.dof.min_val) / (self.esp_value_type.max_in - self.esp_value_type.min_in)
-
-    def on_msg_received_preprocessing(self, float_val):
-        # NB if input exceeds the bounds, its saturated to them, and we don't need any more computation
-        if float_val > self.esp_value_type.max_in:
-            temp = self.dof.max_val
-        elif float_val < self.esp_value_type.min_in:
-            temp = self.dof.min_val
-        else:
-            temp = self.dof.min_val + self.slope * (float_val - self.esp_value_type.min_in)
-
-        return self.dof.postprocessing(temp)
-    
     def on_msg_received(self, string_msg):
-
-        if self.dof is None:
-            print("[ESP VALUE][on_msg_received] - DOF IS NULL -> AVOIDING MSG")
 
         # convert message to FLOAT and save it as 'current_value'
         # if operation can't be completed, notify with PRINT and RETURN
@@ -86,15 +62,10 @@ class EspValue:
         # if yes, return key-value message to send to setpoint and update previous setpoint
         self.last_sent_value = self.current_value
         #
-        # print(f"                  |-- sending current value: {self.current_value}")
+        # print(f" |-- sending current value: {self.current_value}")
 
         return get_key_value_string(self.dof.key, self.current_value)
-    
-    
 
-    def get_msg():
-        return get_key_value_string(self.dof.key, self.current_value)
-    
     # -- UTILS
     def print_info(self):
         print(f"[ESP VALUE][PRINT INFO] - dof: '{self.dof}'")

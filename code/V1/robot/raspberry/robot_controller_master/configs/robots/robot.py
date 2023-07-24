@@ -13,6 +13,12 @@ class Robot:
         self.ip = ip
         self.dof_name_to_serial_port_dict = dofs
 
+    def __init__(self, name, ip, dofs,dof_serial_mapping):
+        self.robot_name = name
+        self.ip = ip
+        self.dof_name_to_serial_port_dict = dofs
+        self.serial_mapping_dict = dof_serial_mapping
+
     def has_dof(self, dof_key):
         # returns TRUE if there is a DOF with the corresponding input DOF_KEY
         for dof_enum in self.dof_name_to_serial_port_dict.keys():

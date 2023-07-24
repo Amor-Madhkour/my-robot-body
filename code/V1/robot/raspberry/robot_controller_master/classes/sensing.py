@@ -1,17 +1,22 @@
+
 import time
 from subprocess import call
+from classes.raw_value import RawValue
 from classes.serial_channel import SerialChannel
 from classes.networking_channel import NetworkingChannel
 from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
-from classes.esp_value import EspValue
-from utils.util_methods import get_single_msg_for_serial
+from classes.in_sensor  import InsensorValueChannel, InsensorMultiValueChannel
+from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
+from utils.util_methods import get_single_msg_for_serial,parse_serial_message
 from utils.util_methods import bytes_to_unicode_str
 from utils.constants import net_reset_msg, net_quit_msg, MSG_DELIMITER
 from configs.esps.esp_types import esp_value_types, ESP_CHANNEL_TYPE
 
 
 DEFAULT_SERIAL_ELAPSED = 0.005
-
+id1="Outsensor1"
+id2="Outsensor2"
+id3="Outsensor3"
 
 def quit_program():
     print("[Sensing]-----------QUIT")
@@ -40,8 +45,7 @@ class Sensing:
         }
 
         # -- SERIAL (with Arduino)
-        #
-        # there is ONE SERIAL CHANNEL for every micro .
+        # there is ONE SERIAL CHANNEL for every Arduino on the Robot.
         # it's a STRING-SERIALCHANNEL dict, where the STRING is the SERIAL PORT of that channel
         self.SERIAL_CHANNELS = dict()
 
@@ -51,8 +55,15 @@ class Sensing:
 
         self.last_serial_time = time.time()
 
-        # -- ESP CHANNEL
+      
+        self.INSENSOR_CHANNELS = dict()
+        self.setup_init_inSensor_config()
+
+
+          # -- ESP CHANNEL
         self.ESP_CHANNELS = dict()
+        self.setup_init_outSensor_config()
+
 
     # ------------------------------------------------------------------------------------------ APP CONFIG
     def on_new_config_rcv(self, ip, esp_value_key, dof_key, set):
@@ -95,22 +106,22 @@ class Sensing:
                     dof = temp_dof
                     break
             if dof is None:
-                print(f"[CONTROLS][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
+                print(f"[Sensing][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
                       f"INVALID DOF - DOF NOT PRESENT IN ROBOT CONFIG")
 
             # 1.
-            temp_esp_value = EspValue(esp_value_types[esp_value_key], dof)
+            temp_raw_value = RawValue(esp_value_types[esp_value_key], dof)
 
             # 2.
-            if temp_esp_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
-                self.add_esp_value_single(ip, temp_esp_value)
-            elif temp_esp_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.MULTI_VALUE:
-                self.add_esp_value_multi(ip, temp_esp_value)
+            if temp_raw_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
+                self.add_raw_value_single(ip, temp_raw_value)
+            elif temp_raw_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.MULTI_VALUE:
+                self.add_raw_value_multi(ip, temp_raw_value)
             else:
-                print(f"[CONTROLS][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
+                print(f"[Sensing][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
                       f"INVALID CHANNEL TYPE")
 
-    def add_esp_value_single(self, ip, new_esp_value):
+    def add_raw_value_single(self, ip, new_esp_value):
         # called when receiving a message from THE APP.
         # called to ADD a new ESP-DOF link, with a SINGLE-VALUE ESP with IP='ip'.
         # 1. generate a new Single-Value esp channel with that IP and add it to the DICT of channels,
@@ -118,7 +129,7 @@ class Sensing:
         temp_esp_channel = SingleValueEspChannel(ip, new_esp_value)
         self.ESP_CHANNELS[ip] = temp_esp_channel
 
-    def add_esp_value_multi(self, ip, new_esp_value):
+    def add_raw_value_multi(self, ip, new_esp_value):
         # called when receiving a message from THE APP.
         # called to ADD a new ESP-DOF link, with a SINGLE-VALUE ESP with IP='ip'.
         # 1. check if there already is an ESP_CHANNEL with that IP in the dict.
@@ -139,37 +150,16 @@ class Sensing:
     #     self.ESP_CHANNELS[new_esp_channel.ip] = new_esp_channel
 
     def setup(self):
-        print(f"[Sensing][SETUP] ---------------------------------------------- BEGIN")
+        print(f"[SENSING][SETUP] ---------------------------------------------- BEGIN")
         # 1:
         self.NETWORKING_CHANNEL.setup_udp(self.priority_responses)
         # 2:
         for serial_channel in self.SERIAL_CHANNELS.values():
             serial_channel.setup_serial()
 
-        print(f"[Sensing][SETUP] ---------------------------------------------- COMPLETE\n")
+        print(f"[SENSING][SETUP] ---------------------------------------------- COMPLETE\n")
 
     # ------------------------------------------------------------------------------------------ LOOP
-    def get_esp_signals(self):
-        # try to get an UDP message
-        # read_udp_blocking() has been set to NON-BLOCKING during initialization.
-        # if there is no message to read, the method will return FALSE.
-
-        # UDP: wait for a new message, and get the sender IP.
-        #      the senders are the ESP. Check if the sender is a VALID ESP (one among the 'self.ESP_CHANNELS')
-        #      if it is, call the corresponding 'onMsgRcv' method to process the data accordingly
-        if self.NETWORKING_CHANNEL.read_udp_non_blocking():
-
-            string_msg = bytes_to_unicode_str(self.NETWORKING_CHANNEL.udp_data[0])
-
-            # check if the MSG is valid (None if 'decode' failed) and non-empty
-            if string_msg is not None and string_msg:
-                sender_ip = self.NETWORKING_CHANNEL.udp_data[1][0]
-                print(f"[CONTROL][get_esp_signals] - msg: '{string_msg}' - sender: '{sender_ip}'")
-
-                # check if the message came from a VALID ESP CHANNEL
-                if sender_ip in self.ESP_CHANNELS:
-                    self.ESP_CHANNELS[sender_ip].on_esp_msg_rcv(string_msg)
-
     def write_serial(self):
         # the SOURCE for the values to SEND via serial is ANY ESP amongst the ESP_CHANNELS
         # currently registered in the DICT
@@ -197,8 +187,128 @@ class Sensing:
 
                 # remove the msg delimiter at the end of the MSG
                 if msg[-1] == MSG_DELIMITER:
-                    msg = msg[:-1]                     break
+                    msg = msg[:-1]
 
+                serial_channel.write_serial(msg)
+
+    def read_serial(self):
+        # read all there is to read, if any
+        # update serial time only if something was read
+        for serial_channel in self.SERIAL_CHANNELS.values():
+            while True:
+                line = serial_channel.read_serial_non_blocking()
+                if line is not None:
+                    # print(line)
+                    pass
+                else:
+                    break
+
+
+#TODO qui è setup iniziale in cui i Raw value vengono creati e aggiunti ai canali INSENSOR 
+    def setup_init_config(self):
+        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
+        # ADD CONFIG
+        for serial_port in self.SERIAL_CHANNELS:
+            for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+                if(serial_port == self.ROBOT.dof_name_to_serial_port_dict[temp_dof]):
+                    for esp_value_key in self.ROBOT.serial_mapping_dict:
+                        if temp_dof.value.key == esp_value_key.value.key:
+                            temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
+                            temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
+                            if temp_raw_value.serial_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
+                                self.add_raw_value_single(serial_port, temp_raw_value)
+                            elif temp_raw_value.serial_value_type.channel_type == ESP_CHANNEL_TYPE.MULTI_VALUE:
+                                self.add_raw_value_multi(serial_port, temp_raw_value)
+                            else:
+                                print(f"[Sensing][on_new_config_rcv] - ip: '{serial_port}'- esp_value_key: '{esp_value_key}' - dof: '{dof}': "
+                    f"INVALID CHANNEL TYPE")
+                                
+
+    #TODO  second version without the serial mapping
+    def setup_init_inSensor_config(self):
+        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
+        # ADD CONFIG
+        for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+            for esp_value_key in self.ROBOT.serial_mapping_dict:
+                if temp_dof.value.key == esp_value_key.value.key:
+                    temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
+                    temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
+                    self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
+
+    def add_raw_value_single(self, serial, serial_value):
+   
+        if serial not in self.INSENSOR_CHANNELS.keys():
+            temp_insensor_channel = InsensorValueChannel(serial, serial_value)
+            self.INSENSOR_CHANNELS[serial] = temp_insensor_channel
+
+        self.INSENSOR_CHANNELS[serial].add_esp_value(serial_value)
+
+    def add_raw_value_multi(self, serial, new_esp_value):
+        
+        if serial not in self.INSENSOR_CHANNELS.keys():
+            temp_insensor_channel = InsensorMultiValueChannel(serial)
+            self.INSENSOR_CHANNELS[serial] = temp_insensor_channel
+
+        self.INSENSOR_CHANNELS[serial].add_esp_value(new_esp_value)
+
+
+
+    #TODO setup init outSensor config
+    # -------------------------------------- setup init outSensor config
+    def setup_init_outSensor_config(self):
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value,"M")
+        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,"M")
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_Y.value,"M")
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"M")
+        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.GYRO_Z.value,"M")
+        self.on_new_config(id3, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"S")
+    
+    def on_new_config(self, id, esp_value_key, type):
+        if(type=="S"):
+            self.add_inSensor_value_single(id, self.INSENSOR_CHANNELS[esp_value_key])
+        elif type=="M":
+            self.add_inSensor_value_multi(id, self.INSENSOR_CHANNELS[esp_value_key])               
+
+    def add_inSensor_value_single(self, serial, serial_value):
+   
+        temp_insensor_channel = InsensorValueChannel(serial, serial_value)
+        self.ESP_CHANNELS[serial] = temp_insensor_channel
+
+    def add_inSensor_value_multi(self, serial, new_esp_value):
+        
+        if serial not in self.SERIAL_CHANNELS:
+            temp_insensor_channel = InsensorMultiValueChannel(serial)
+            self.ESP_CHANNELS[serial] = temp_insensor_channel
+
+        self.ESP_CHANNELS[serial].add_esp_value(new_esp_value)
+
+
+
+
+   
+    def get_serial_signals(self):
+        # try to get an UDP message
+        # read_udp_blocking() has been set to NON-BLOCKING during initialization.
+        # if there is no message to read, the method will return FALSE.
+
+        # UDP: wait for a new message, and get the sender port
+        #      the senders are the ESP. Check if the sender is a VALID ESP (one among the 'self.ESP_CHANNELS')
+        #      if it is, call the corresponding 'onMsgRcv' method to process the data accordingly
+        for serial_port, serial_channel in self.SERIAL_CHANNELS.items():
+
+            while True:
+                line = serial_channel.read_serial_non_blocking()
+                # check if the MSG is valid (None if 'decode' failed) and non-empty
+                if line is not None and line:
+                    print(f"[sensing][get_serial_signals] - msg: '{line}'")
+                    all_key_val_msgs = parse_serial_message(line)
+                    if len(all_key_val_msgs)==1:
+                        self.add_raw_value_single(serial_port, all_key_val_msgs)
+                    elif len(all_key_val_msgs)>1:
+                        self.add_raw_value_multi(serial_port, all_key_val_msgs)
+                    else:
+                        print(f" '{serial_port}' INVALID CHANNEL TYPE")
+         
     def serial_communication(self):
         # Raspberry and Arduino need to negotiate the HALF-DUPLEX serial channel.
         # to do this, they each send a single full message to the other, one at a time:
@@ -226,9 +336,7 @@ class Sensing:
 
         # 1
         # print(f"------GET ESP SIGNALS")
-        #self.get_esp_signals()
-        
-        self.read_serial()
+        self.get_serial_signals()
         # print()
 
         # 2
@@ -240,7 +348,7 @@ class Sensing:
     # -- ESP PRIORITY MESSAGES
     #
     def restart_program(self):
-        print("[Sensing]-----------RESTARTING")
+        print("[CONTROL]-----------RESTARTING")
         self.cleanup()
         time.sleep(1)
         rc = call(self.path_to_restart)

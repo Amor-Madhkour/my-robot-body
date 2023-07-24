@@ -5,6 +5,10 @@ from classes.serial_channel import SerialChannel
 from classes.networking_channel import NetworkingChannel
 from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
 from classes.esp_value import EspValue
+from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
+from classes.raw_value import RawValue
+from classes.in_sensor import InsensorMultiValueChannel, InsensorValueChannel
+from utils.util_methods import parse_serial_message
 from utils.util_methods import get_single_msg_for_serial
 from utils.util_methods import bytes_to_unicode_str
 from utils.constants import net_reset_msg, net_quit_msg, MSG_DELIMITER
@@ -12,7 +16,9 @@ from configs.esps.esp_types import esp_value_types, ESP_CHANNEL_TYPE
 
 
 DEFAULT_SERIAL_ELAPSED = 0.005
-
+id1="Outsensor1"
+id2="Outsensor2"
+id3="Outsensor3"
 
 def quit_program():
     print("[CONTROL]-----------QUIT")
@@ -48,11 +54,16 @@ class Control:
         for serial_port in set(self.ROBOT.dof_name_to_serial_port_dict.values()):
             if serial_port not in self.SERIAL_CHANNELS:
                 self.SERIAL_CHANNELS[serial_port] = SerialChannel(serial_port)
+               # print(f"[CONTROLS][on_new_config_rcv] '{self.SERIAL_CHANNELS}'")
 
         self.last_serial_time = time.time()
-
+        
+        self.INSENSOR_CHANNELS = dict()
+        self.setup_init_inSensor_config()
         # -- ESP CHANNEL
         self.ESP_CHANNELS = dict()
+        self.setup_init_outSensor_config()
+        print("Hola")
 
     # ------------------------------------------------------------------------------------------ APP CONFIG
     def on_new_config_rcv(self, ip, esp_value_key, dof_key, set):
@@ -130,6 +141,7 @@ class Control:
             self.ESP_CHANNELS[ip] = temp_esp_channel
 
         self.ESP_CHANNELS[ip].add_esp_value(new_esp_value)
+        print(f"[CONTROL][SETUP] ---------------------------------------------- BEGIN")
 
     # ------------------------------------------------------------------------------------------ SETUP
     # def add_esp_channel(self, new_esp_channel):
@@ -200,6 +212,7 @@ class Control:
                     msg = msg[:-1]
 
                 serial_channel.write_serial(msg)
+         
 
     def read_serial(self):
         # read all there is to read, if any
@@ -262,3 +275,42 @@ class Control:
         for serial_channel in self.SERIAL_CHANNELS.values():
             serial_channel.cleanup()
         self.NETWORKING_CHANNEL.cleanup()
+
+
+                    
+    def setup_init_inSensor_config(self):
+        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
+        # ADD CONFIG
+        for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+            for esp_value_key in self.ROBOT.serial_mapping_dict:
+                if temp_dof.value.key == esp_value_key.value.key:
+                    temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
+                    temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
+                    self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
+
+    def setup_init_outSensor_config(self):
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value,"M")
+        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,"M")
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_Y.value,"M")
+        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"M")
+        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.GYRO_Z.value,"M")
+        self.on_new_config(id3, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"S")
+    
+    def on_new_config(self, id, esp_value_key, type):
+        if(type=="S"):
+            self.add_inSensor_value_single(id, self.INSENSOR_CHANNELS[esp_value_key])
+        elif type=="M":
+            self.add_inSensor_value_multi(id, self.INSENSOR_CHANNELS[esp_value_key])               
+
+    def add_inSensor_value_single(self, id, serial_value):
+   
+        temp_insensor_channel = InsensorValueChannel(id, serial_value)
+        self.ESP_CHANNELS[id] = temp_insensor_channel
+
+    def add_inSensor_value_multi(self, id, new_esp_value):
+        
+        if id not in self.ESP_CHANNELS:
+            temp_insensor_channel = InsensorMultiValueChannel(id)
+            self.ESP_CHANNELS[id] = temp_insensor_channel
+
+        self.ESP_CHANNELS[id].add_esp_value(new_esp_value)

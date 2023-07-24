@@ -18,6 +18,8 @@ path_to_restart = "./" + restart_file_name  # abs_path + "/restart.sh"
 # STRING IPS
 test_ip_1 = "192.168.0.40"
 
+test_ip_2 = "192.168.0.42"
+
 # ______________________________________________________________________________________________ CREATE VIRTUAL ObJECTS
 
 # INITIALIZE CONTROLS
@@ -39,6 +41,9 @@ def add_esp_channels():
     control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value, DofName.PETALS.value.key, True)
     control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value, DofName.EYE_X.value.key, True)
     control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_Z.value, DofName.LED.value.key, True)
+    control.on_new_config_rcv(test_ip_2, ESP_VALUE_TYPE_KEYS.ANGLE_X.value, DofName.PETALS.value.key, True)
+    control.on_new_config_rcv(test_ip_2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value, DofName.EYE_X.value.key, True)
+    control.on_new_config_rcv(test_ip_2, ESP_VALUE_TYPE_KEYS.ANGLE_Z.value, DofName.LED.value.key, True)
 
 # ______________________________________________________________________________________________ MAIN
 

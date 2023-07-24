@@ -57,6 +57,7 @@ esp_value_types = {
     # --- MICROPHONE
     ESP_VALUE_TYPE_KEYS.MICROPHONE.value:
         EspValueType(ESP_VALUE_TYPE_KEYS.MICROPHONE.value, ESP_CHANNEL_TYPE.SINGLE_VALUE, 0, 10),
+        
 
     # --- SONAR
     ESP_VALUE_TYPE_KEYS.SONAR.value:

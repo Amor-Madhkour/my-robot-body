@@ -2,6 +2,7 @@
 from configs.robots.robot import Robot
 from configs.robots.dof import DofName
 from utils.constants import serial_default_port
+from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
 
 
 room_name = 'room'
@@ -21,4 +22,16 @@ room_dofs = {
 }
 
 
-room = Robot(room_name, room_ip, room_dofs)
+
+room_mapping = {
+    DofName.FORWARD: ESP_VALUE_TYPE_KEYS.ANGLE_X.value,
+    DofName.STRAFE:ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,
+    DofName.ANGULAR: ESP_VALUE_TYPE_KEYS.ANGLE_Z.value,
+    DofName.PETALS: ESP_VALUE_TYPE_KEYS.GYRO_X.value,
+    DofName.EYE_X: ESP_VALUE_TYPE_KEYS.GYRO_Y.value,
+    DofName.EYE_Y: ESP_VALUE_TYPE_KEYS.GYRO_Z.value,
+    DofName.LED: ESP_VALUE_TYPE_KEYS.SONAR.value,
+}
+
+
+room = Robot(room_name, room_ip, room_dofs, room_mapping)

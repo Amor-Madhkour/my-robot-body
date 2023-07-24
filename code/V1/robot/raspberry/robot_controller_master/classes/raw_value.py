@@ -5,11 +5,11 @@ from utils.util_methods import get_key_value_string
 # wrapper for a SINGLE VALUE coming from and ESP.
 # Each type of value has its own processing for when the value is received,
 # which will convert the value from the one received from unity/arduino to the one to be sent to Unity/Arduino
-class EspValue:
+class RawValue:
 
-    def __init__(self, esp_value_type, dof):
+    def __init__(self, serial_value_type, dof):
 
-        self.esp_value_type = esp_value_type
+        self.serial_value_type = serial_value_type
 
         # this is the value that is updated when new setpoint is received 
         # and that is sent to ARDUINO.
@@ -27,16 +27,16 @@ class EspValue:
         self.dof = dof_name.value
         self.dof_name = dof_name
         # parameters of the mapping function
-        self.slope = (self.dof.max_val - self.dof.min_val) / (self.esp_value_type.max_in - self.esp_value_type.min_in)
+        self.slope = (self.dof.max_val - self.dof.min_val) / (self.serial_value_type.max_in - self.serial_value_type.min_in)
 
     def on_msg_received_preprocessing(self, float_val):
         # NB if input exceeds the bounds, its saturated to them, and we don't need any more computation
-        if float_val > self.esp_value_type.max_in:
+        if float_val > self.serial_value_type.max_in:
             temp = self.dof.max_val
-        elif float_val < self.esp_value_type.min_in:
+        elif float_val < self.serial_value_type.min_in:
             temp = self.dof.min_val
         else:
-            temp = self.dof.min_val + self.slope * (float_val - self.esp_value_type.min_in)
+            temp = self.dof.min_val + self.slope * (float_val - self.serial_value_type.min_in)
 
         return self.dof.postprocessing(temp)
     

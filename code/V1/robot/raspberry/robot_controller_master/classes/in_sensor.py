@@ -6,11 +6,11 @@ from configs.esps.esp_types import ESP_CHANNEL_TYPE
 # class used to handle the relay of messages from hardware from serial
 class inSensor:
 
-    def __init__(self, ip):
+    def __init__(self, serial):
 
         #self.serial_value = serial_value
         self.channel_type = None
-        self.ip = ip
+        self.serial = serial
 
     def on_esp_msg_rcv(self, string_msg):
         pass
@@ -19,8 +19,8 @@ class inSensor:
 
 class InsensorValueChannel(inSensor):
 
-    def __init__(self, ip, serial_value):
-        super(InsensorValueChannel, self).__init__(ip)
+    def __init__(self, serial, serial_value):
+        super(InsensorValueChannel, self).__init__(serial)
 
         # the channel contains a single esp value.
         self.esp_value = serial_value
@@ -39,8 +39,8 @@ class InsensorValueChannel(inSensor):
 
 class InsensorMultiValueChannel(inSensor):
 
-    def __init__(self, ip):
-        super(InsensorMultiValueChannel, self).__init__(ip)
+    def __init__(self, serial):
+        super(InsensorMultiValueChannel, self).__init__(serial)
 
         # the channel contains a number of "esp values" that are the values
         # that come from the ESP and need to be sent to Arduino after a processing
@@ -64,8 +64,7 @@ class InsensorMultiValueChannel(inSensor):
         # 2. for each individual key-value msg,
         #    call the "on_msg_rcv" of the EspValue with the corresponding KEY
 
-        all_key_val_msgs = parse_serial_message(string_msg)
-
+        all_key_val_msgs = string_msg
         # print(f"[MultiValueEspChannel][on_esp_msg_rcv] - ip: {self.ip} - messages: '{all_key_val_msgs}'")
 
         for msg in all_key_val_msgs:

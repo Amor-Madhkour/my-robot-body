@@ -7,6 +7,7 @@ from classes.networking_channel import NetworkingChannel
 from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
 from classes.in_sensor  import InsensorValueChannel, InsensorMultiValueChannel
 from classes.out_sensor import PassThroughChannel, AggregateChannel
+from classes.esp_value import EspValue
 from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
 from utils.util_methods import get_single_msg_for_serial,parse_serial_message
 from utils.util_methods import bytes_to_unicode_str
@@ -111,7 +112,7 @@ class Sensing:
                       f"INVALID DOF - DOF NOT PRESENT IN ROBOT CONFIG")
 
             # 1.
-            temp_raw_value = RawValue(esp_value_types[esp_value_key], dof)
+            temp_raw_value = EspValue(esp_value_types[esp_value_key], dof)
 
             # 2.
             if temp_raw_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
@@ -215,7 +216,7 @@ class Sensing:
                     for esp_value_key in self.ROBOT.serial_mapping_dict:
                         if temp_dof.value.key == esp_value_key.value.key:
                             temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
-                            temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
+                            temp_raw_value = EspValue(esp_value_types[temp_esp_value], temp_dof)
                             if temp_raw_value.serial_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
                                 self.add_raw_value_single(serial_port, temp_raw_value)
                             elif temp_raw_value.serial_value_type.channel_type == ESP_CHANNEL_TYPE.MULTI_VALUE:
@@ -233,7 +234,7 @@ class Sensing:
             for esp_value_key in self.ROBOT.serial_mapping_dict:
                 if temp_dof.value.key == esp_value_key.value.key:
                     temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
-                    temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
+                    temp_raw_value = EspValue(esp_value_types[temp_esp_value], temp_dof)
                     self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
 
 

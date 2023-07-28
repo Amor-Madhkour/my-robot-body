@@ -6,6 +6,7 @@ from classes.serial_channel import SerialChannel
 from classes.networking_channel import NetworkingChannel
 from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
 from classes.in_sensor  import InsensorValueChannel, InsensorMultiValueChannel
+from classes.out_sensor import PassThroughChannel, AggregateChannel
 from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
 from utils.util_methods import get_single_msg_for_serial,parse_serial_message
 from utils.util_methods import bytes_to_unicode_str
@@ -235,6 +236,7 @@ class Sensing:
                     temp_raw_value = RawValue(esp_value_types[temp_esp_value], temp_dof)
                     self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
 
+
     def add_raw_value_single(self, serial, serial_value):
    
         if serial not in self.INSENSOR_CHANNELS.keys():
@@ -255,6 +257,7 @@ class Sensing:
 
     #TODO setup init outSensor config
     # -------------------------------------- setup init outSensor config
+    
     def setup_init_outSensor_config(self):
         self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value,"M")
         self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,"M")
@@ -262,28 +265,35 @@ class Sensing:
         self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"M")
         self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.GYRO_Z.value,"M")
         self.on_new_config(id3, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"S")
+
+        for temp in self.ESP_CHANNELS.values():
+            if temp.channel_type == ESP_CHANNEL_TYPE.AGGREGATIONE_VALUE:
+                temp1= temp.esp_values.values()
+                for rv in temp1:
+                    print(rv.current_value)
+            else:
+                temp1= temp.esp_value.current_value
+                print(temp1)
+        
     
     def on_new_config(self, id, esp_value_key, type):
         if(type=="S"):
             self.add_inSensor_value_single(id, self.INSENSOR_CHANNELS[esp_value_key])
         elif type=="M":
             self.add_inSensor_value_multi(id, self.INSENSOR_CHANNELS[esp_value_key])               
-
-    def add_inSensor_value_single(self, serial, serial_value):
+    
+    def add_inSensor_value_single(self, id, serial_value):
    
-        temp_insensor_channel = InsensorValueChannel(serial, serial_value)
-        self.ESP_CHANNELS[serial] = temp_insensor_channel
+        temp_insensor_channel = PassThroughChannel(id, serial_value)
+        self.ESP_CHANNELS[id] = temp_insensor_channel
 
-    def add_inSensor_value_multi(self, serial, new_esp_value):
+    def add_inSensor_value_multi(self, id, new_esp_value):
         
-        if serial not in self.SERIAL_CHANNELS:
-            temp_insensor_channel = InsensorMultiValueChannel(serial)
-            self.ESP_CHANNELS[serial] = temp_insensor_channel
+        if id not in self.ESP_CHANNELS:
+            temp_insensor_channel = AggregateChannel(id)
+            self.ESP_CHANNELS[id] = temp_insensor_channel
 
-        self.ESP_CHANNELS[serial].add_esp_value(new_esp_value)
-
-
-
+        self.ESP_CHANNELS[id].add_esp_value(new_esp_value)
 
    
     def get_serial_signals(self):

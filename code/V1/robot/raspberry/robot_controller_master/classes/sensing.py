@@ -206,7 +206,7 @@ class Sensing:
                     break
 
 
-#TODO qui è setup iniziale in cui i Raw value vengono creati e aggiunti ai canali INSENSOR 
+    #TODO qui è setup iniziale in cui i Raw value vengono creati e aggiunti ai canali INSENSOR 
     def setup_init_config(self):
         # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
         # ADD CONFIG
@@ -224,19 +224,6 @@ class Sensing:
                             else:
                                 print(f"[Sensing][on_new_config_rcv] - ip: '{serial_port}'- esp_value_key: '{esp_value_key}' - dof: '{dof}': "
                     f"INVALID CHANNEL TYPE")
-                                
-
-    #TODO  second version without the serial mapping
-    def setup_init_inSensor_config(self):
-        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
-        # ADD CONFIG
-        for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
-            for esp_value_key in self.ROBOT.serial_mapping_dict:
-                if temp_dof.value.key == esp_value_key.value.key:
-                    temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
-                    temp_raw_value = EspValue(esp_value_types[temp_esp_value], temp_dof)
-                    self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
-
 
     def add_raw_value_single(self, serial, serial_value):
    
@@ -254,6 +241,16 @@ class Sensing:
 
         self.INSENSOR_CHANNELS[serial].add_esp_value(new_esp_value)
 
+    #TODO  second version without the serial mapping
+    def setup_init_inSensor_config(self):
+        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
+        # ADD CONFIG
+        for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+            for esp_value_key in self.ROBOT.serial_mapping_dict:
+                if temp_dof.value.key == esp_value_key.value.key:
+                    temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
+                    temp_raw_value = EspValue(esp_value_types[temp_esp_value], temp_dof)
+                    self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
 
 
     #TODO setup init outSensor config

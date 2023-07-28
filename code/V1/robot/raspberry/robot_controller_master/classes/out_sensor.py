@@ -61,7 +61,7 @@ class AggregateChannel(outSensor):
 
     def add_esp_value(self, insensor_value):
         # this overrides any ESP_VALUE with the same key
-        self.insensor_values[insensor_value.serial_value_type.key] = insensor_value
+        self.insensor_values[insensor_value.esp_value_type.key] = insensor_value
 
     def remove_esp_value(self, insensor_value_key):
         del self.insensor_values[insensor_value_key]

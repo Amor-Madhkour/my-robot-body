@@ -66,84 +66,6 @@ class Sensing:
         self.ESP_CHANNELS = dict()
         self.setup_init_outSensor_config()
 
-
-    # ------------------------------------------------------------------------------------------ APP CONFIG
-    def on_new_config_rcv(self, ip, esp_value_key, dof_key, set):
-        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
-
-        if not set:
-            # REMOVE CONFIG
-            # if SET IS FALSE, it means the ESP_VALUE is to be set DEACTIVATED
-            #    (meaning: the corresponding ESP_VALUE class must be removed, if present)
-            #    0. check if IP is present in the list. If not, DO NOTHING (it means that config is ABSENT)
-            #    2. check if the 'esp value' has an esp type 'single' or 'multi'.
-            #       - if 'single', remove the entire ESP_CHANNEL from list;
-            #       - if 'multi', remove the ESP_VALUE from the corresponding ESP_CHANNEL.
-            #         if Esp_channel becomes empty, remove it
-
-            # 0.
-            if ip not in self.ESP_CHANNELS:
-                return
-
-            if self.ESP_CHANNELS[ip].channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
-                del self.ESP_CHANNELS[ip]
-            else:
-                self.ESP_CHANNELS[ip].remove_esp_value(esp_value_key)
-                if len(self.ESP_CHANNELS[ip].esp_values) <= 0:
-                    del self.ESP_CHANNELS[ip]
-
-        else:
-            # ADD CONFIG
-            # if SET IS TRUE, it means the ESP_VALUE is to be set ACTIVE
-            #   (meaning: the corresponding ESP_VALUE class must exist)
-            #    ip = 'ip' and key = 'esp_value_    key' is to be associated with DOF = 'dof'.
-            #    0. get the DOFNAME enum element from the STRING KEY
-            #    1. generate a new ESP_VALUE according to the KEY.
-            #    2. check if the 'esp value' has an esp type 'single' or 'multi', and then call the corresponding method
-
-            # 0.
-            dof = None
-            for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
-                if temp_dof.value.key == dof_key:
-                    dof = temp_dof
-                    break
-            if dof is None:
-                print(f"[Sensing][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
-                      f"INVALID DOF - DOF NOT PRESENT IN ROBOT CONFIG")
-
-            # 1.
-            temp_raw_value = EspValue(esp_value_types[esp_value_key], dof)
-
-            # 2.
-            if temp_raw_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.SINGLE_VALUE:
-                self.add_raw_value_single(ip, temp_raw_value)
-            elif temp_raw_value.esp_value_type.channel_type == ESP_CHANNEL_TYPE.MULTI_VALUE:
-                self.add_raw_value_multi(ip, temp_raw_value)
-            else:
-                print(f"[Sensing][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
-                      f"INVALID CHANNEL TYPE")
-
-    def add_raw_value_single(self, ip, new_esp_value):
-        # called when receiving a message from THE APP.
-        # called to ADD a new ESP-DOF link, with a SINGLE-VALUE ESP with IP='ip'.
-        # 1. generate a new Single-Value esp channel with that IP and add it to the DICT of channels,
-        #    using the IP as KEY. If there was a previous one with same IP, it's simply overridden
-        temp_esp_channel = SingleValueEspChannel(ip, new_esp_value)
-        self.ESP_CHANNELS[ip] = temp_esp_channel
-
-    def add_raw_value_multi(self, ip, new_esp_value):
-        # called when receiving a message from THE APP.
-        # called to ADD a new ESP-DOF link, with a SINGLE-VALUE ESP with IP='ip'.
-        # 1. check if there already is an ESP_CHANNEL with that IP in the dict.
-        #    - if there is NOT: create a new one
-        # 2. add the new ESP_VALUE to the ESP_CHANNEL with that IP using the ESP_CHANNEL method.
-        #    that method will override an existing ESP_VALUE of the same type if present
-        if ip not in self.ESP_CHANNELS:
-            temp_esp_channel = MultiValueEspChannel(ip)
-            self.ESP_CHANNELS[ip] = temp_esp_channel
-
-        self.ESP_CHANNELS[ip].add_esp_value(new_esp_value)
-
     # ------------------------------------------------------------------------------------------ SETUP
     # def add_esp_channel(self, new_esp_channel):
     #     for ip, esp_channel in self.ESP_CHANNELS.items():
@@ -316,7 +238,18 @@ class Sensing:
                         self.add_raw_value_multi(serial_port, all_key_val_msgs)
                     else:
                         print(f" '{serial_port}' INVALID CHANNEL TYPE")
-         
+    def send_sensor_signals(self):  
+
+        msg_to_send = ""
+        for temp in self.ESP_CHANNELS.values():
+            msg_to_send += f"{temp.serial}:{temp.aggregate_values}_"
+        # Rimuovi l'ultimo trattino basso (_)
+            msg_to_send = msg_to_send[:-1]
+        return msg_to_send
+
+
+
+
     def serial_communication(self):
         # Raspberry and Arduino need to negotiate the HALF-DUPLEX serial channel.
         # to do this, they each send a single full message to the other, one at a time:

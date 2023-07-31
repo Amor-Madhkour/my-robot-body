@@ -28,7 +28,7 @@ class PassThroughChannel(outSensor):
         super(PassThroughChannel, self).__init__(ID)
 
         # the channel contains a single esp value.
-        self.esp_value = in_sensor_value
+        self.esp_value = in_sensor_value.current_value
 
         self.channel_type = ESP_CHANNEL_TYPE.PASS_THROGHT
 
@@ -55,7 +55,7 @@ class AggregateChannel(outSensor):
         #current values that have to be aggregated
         self.aggregation_value = []
         #aggregated values
-        self.aggregate_values= 0
+        self.esp_value= 0
 
         self.channel_type = ESP_CHANNEL_TYPE.AGGREGATIONE_VALUE
 
@@ -85,7 +85,7 @@ class AggregateChannel(outSensor):
         if self.aggregation_function is not None:
             if len(self.insensor_values) == 0:
               raise ValueError("the dict is empty")
-            self.aggregate_values = self.get_aggregation_value()
+            self.esp_value = self.get_aggregation_value()
             
             
 
@@ -97,7 +97,7 @@ class AggregateChannel(outSensor):
         self.aggregation_function = aggregation_function
 
     def get_aggregation_value(self):
-        return self.aggregate_values
+        return self.esp_value
 
    
                     

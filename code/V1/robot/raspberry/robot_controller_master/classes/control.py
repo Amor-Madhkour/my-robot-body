@@ -7,7 +7,6 @@ from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
 from classes.out_sensor import PassThroughChannel, AggregateChannel
 from classes.esp_value import EspValue
 from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
-
 from utils.util_methods import parse_serial_message
 from utils.util_methods import get_single_msg_for_serial
 from utils.util_methods import bytes_to_unicode_str
@@ -289,6 +288,7 @@ class Control:
 
         
     def setup_init_outSensor_config(self):
+        msg_to_send = ""
         self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value,"M")
         self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,"M")
         self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_Y.value,"M")
@@ -296,7 +296,7 @@ class Control:
         self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.GYRO_Z.value,"M")
         self.on_new_config(id3, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"S")
 
-        for temp in self.ESP_CHANNELS.values():
+        '''for temp in self.ESP_CHANNELS.values():
             if temp.channel_type == ESP_CHANNEL_TYPE.AGGREGATIONE_VALUE:
                 temp1= temp.insensor_values.values()
                 for rv in temp1:
@@ -304,6 +304,9 @@ class Control:
             else:
                 temp1= temp.esp_value.current_value
                 print(temp1)
+        '''
+        msg_to_send=self.send_sensor_signals()
+        print(msg_to_send)
         
     
     def on_new_config(self, id, esp_value_key, type):
@@ -324,3 +327,14 @@ class Control:
             self.ESP_CHANNELS[id] = temp_insensor_channel
 
         self.ESP_CHANNELS[id].add_esp_value(new_esp_value)
+
+
+    def send_sensor_signals(self):  
+
+        msg_to_send = ''
+        for temp in self.ESP_CHANNELS.values():
+            msg_to_send += f"{temp.serial}:{temp.esp_value}{MSG_DELIMITER}{MSG_DELIMITER}"
+                        
+        # Rimuovi l'ultimo trattino basso (_)
+            msg_to_send = msg_to_send[:-1]
+        return msg_to_send

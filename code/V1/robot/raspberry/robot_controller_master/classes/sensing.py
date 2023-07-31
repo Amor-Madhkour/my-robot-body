@@ -238,11 +238,13 @@ class Sensing:
                         self.add_raw_value_multi(serial_port, all_key_val_msgs)
                     else:
                         print(f" '{serial_port}' INVALID CHANNEL TYPE")
-    def send_sensor_signals(self):  
 
-        msg_to_send = ""
+
+    def send_sensor_signals(self):  
+        msg_to_send = ''
         for temp in self.ESP_CHANNELS.values():
-            msg_to_send += f"{temp.serial}:{temp.aggregate_values}_"
+            msg_to_send += f"{temp.serial}:{temp.esp_value}{MSG_DELIMITER}{MSG_DELIMITER}"
+                        
         # Rimuovi l'ultimo trattino basso (_)
             msg_to_send = msg_to_send[:-1]
         return msg_to_send

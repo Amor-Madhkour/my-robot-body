@@ -329,12 +329,4 @@ class Control:
         self.ESP_CHANNELS[id].add_esp_value(new_esp_value)
 
 
-    def send_sensor_signals(self):  
-
-        msg_to_send = ''
-        for temp in self.ESP_CHANNELS.values():
-            msg_to_send += f"{temp.serial}:{temp.esp_value}{MSG_DELIMITER}{MSG_DELIMITER}"
-                        
-        # Rimuovi l'ultimo trattino basso (_)
-            msg_to_send = msg_to_send[:-1]
-        return msg_to_send
+    

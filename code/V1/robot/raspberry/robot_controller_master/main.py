@@ -1,10 +1,12 @@
 
 import os
+import time
 
 from classes.control import Control
 from classes.sensing import Sensing
 from configs.robots.dof import DofName
 from configs.robots.robots import siid
+
 
 # ______________________________________________________________________________________________GLOBALS
 
@@ -12,7 +14,9 @@ from configs.robots.robots import siid
 abs_path = os.path.dirname(os.path.abspath(__file__))
 restart_file_name = "restart.sh"
 path_to_restart = "./" + restart_file_name  # abs_path + "/restart.sh"
-
+time_difference_ms = 5 # 5 ms
+# Convert time difference to seconds (0.005 seconds)
+time_difference_sec = time_difference_ms / 1000
 
 # ______________________________________________________________________________________________ VALUES
 
@@ -32,7 +36,7 @@ robot = siid.siid
 
 # -- this is the MAIN CLASS, the one handling all the logic
 control = Control(robot, path_to_restart)
-sensing= Sensing(robot, path_to_restart)
+sensing = Sensing(robot, path_to_restart)
 
 
 def add_esp_channels():
@@ -58,6 +62,8 @@ def setup():
 
     # SETUP STRING CONTROL OBJECT
     control.setup()
+    sensing.setup()
+    print(sensing.send_sensor_signals())
 
     print("[SETUP] --------------------------------------------- COMPLETE\n")
 
@@ -69,8 +75,16 @@ def main_body():
     # main loop
     print("[MAIN LOOP] --------------------------------------------- STARTING MAIN LOOP\n")
     while True:
-        # execute CONTROLLERS loop
-        control.loop()
+       
+        start_time = time.time()
+        #every  5ms switch between control and sensing
+        while  (time.time() - start_time) < time_difference_sec:
+            # execute CONTROLLERS loop
+            control.loop()
+
+        while  (time.time() - start_time) < (2 * time_difference_sec):
+             # execute SENSING loop
+            sensing.loop()
 
 
 def main():

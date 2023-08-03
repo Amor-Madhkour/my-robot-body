@@ -15,9 +15,7 @@ from configs.esps.esp_types import esp_value_types, ESP_CHANNEL_TYPE
 
 
 DEFAULT_SERIAL_ELAPSED = 0.005
-id1="Outsensor1"
-id2="Outsensor2"
-id3="Outsensor3"
+
 
 def quit_program():
     print("[CONTROL]-----------QUIT")

@@ -82,50 +82,6 @@ class Sensing:
 
         print(f"[SENSING][SETUP] ---------------------------------------------- COMPLETE\n")
 
-    # ------------------------------------------------------------------------------------------ LOOP
-    def write_serial(self):
-        # the SOURCE for the values to SEND via serial is ANY ESP amongst the ESP_CHANNELS
-        # currently registered in the DICT
-
-        #  METHOD:
-        #  - for EACH ARDUINO (meaning: for each SERIAL CHANNEL):
-        #     - collect all the messages -> process them -> send them via the corresponding SERIAL PORT
-
-        for serial_port, serial_channel in self.SERIAL_CHANNELS.items():
-
-            # print(f"[Control][write_serial] - serial port: '{serial_port}'")
-            # initialize empty message
-            msg = ""
-
-            # check all values of the ESP CHANNELS.
-            #    - use values only for the ESP CHANNELS that are associated to a DOF that is controlled by the
-            #      Arduino on this 'serial_port'
-            for _, esp_channel in self.ESP_CHANNELS.items():
-                for esp_value in esp_channel.esp_values.values():
-                    if self.ROBOT.is_serial_port_correct(esp_value.dof_name, serial_port):
-                        msg = get_single_msg_for_serial(msg, esp_value.get_msg)
-
-            # if empty message, don't send any message via serial
-            if len(msg) > 0:
-
-                # remove the msg delimiter at the end of the MSG
-                if msg[-1] == MSG_DELIMITER:
-                    msg = msg[:-1]
-
-                serial_channel.write_serial(msg)
-
-    def read_serial(self):
-        # read all there is to read, if any
-        # update serial time only if something was read
-        for serial_channel in self.SERIAL_CHANNELS.values():
-            while True:
-                line = serial_channel.read_serial_non_blocking()
-                if line is not None:
-                    # print(line)
-                    pass
-                else:
-                    break
-
 
     #TODO qui è setup iniziale in cui i Raw value vengono creati e aggiunti ai canali INSENSOR 
     def setup_init_config(self):
@@ -213,6 +169,25 @@ class Sensing:
             self.ESP_CHANNELS[id] = temp_insensor_channel
 
         self.ESP_CHANNELS[id].add_esp_value(new_esp_value)
+    # ------------------------------------------------------------------------------------------ LOOP
+    def write(self):
+        #send to the esp/Vr the messages
+        # currently registered in the DICT
+        # (the DICT is populated by the ESP_VALUEs)
+        for esp_channel in self.ESP_CHANNELS.values():
+            esp_channel.write()
+
+    def read_serial(self):
+        # read all there is to read, if any
+        # update serial time only if something was read
+        for serial_channel in self.SERIAL_CHANNELS.values():
+            while True:
+                line = serial_channel.read_serial_non_blocking()
+                if line is not None:
+                    # print(line)
+                    pass
+                else:
+                    break
 
    
     def get_serial_signals(self):
@@ -242,6 +217,7 @@ class Sensing:
     def send_sensor_signals(self):  
         msg_to_send = ''
         for temp in self.ESP_CHANNELS.values():
+            #TODO non so pechè ma devo mettere il doppio msg_delimiter altrimenti non lo prende
             msg_to_send += f"{temp.serial}:{temp.esp_value}{MSG_DELIMITER}{MSG_DELIMITER}"
                         
         # Rimuovi l'ultimo trattino basso (_)

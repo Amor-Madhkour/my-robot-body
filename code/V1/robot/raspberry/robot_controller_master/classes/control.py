@@ -57,12 +57,9 @@ class Control:
 
         self.last_serial_time = time.time()
         
-        self.INSENSOR_CHANNELS = dict()
-        self.setup_init_inSensor_config()
+       
         # -- ESP CHANNEL
         self.ESP_CHANNELS = dict()
-        self.setup_init_outSensor_config()
-        print("Hola")
 
     # ------------------------------------------------------------------------------------------ APP CONFIG
     def on_new_config_rcv(self, ip, esp_value_key, dof_key, set):
@@ -274,59 +271,5 @@ class Control:
         for serial_channel in self.SERIAL_CHANNELS.values():
             serial_channel.cleanup()
         self.NETWORKING_CHANNEL.cleanup()
-
-    def setup_init_inSensor_config(self):
-        # received from APP to set a NEW config: it means that the ESP_VALUE coming from ESP with
-        # ADD CONFIG
-        for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
-            for esp_value_key in self.ROBOT.serial_mapping_dict:
-                if temp_dof.value.key == esp_value_key.value.key:
-                    temp_esp_value=self.ROBOT.serial_mapping_dict[esp_value_key]
-                    temp_raw_value = EspValue(esp_value_types[temp_esp_value], temp_dof)
-                    self.INSENSOR_CHANNELS[temp_esp_value] = temp_raw_value
-
-
-        
-    def setup_init_outSensor_config(self):
-        msg_to_send = ""
-        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value,"M")
-        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value,"M")
-        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_Y.value,"M")
-        self.on_new_config(id1, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"M")
-        self.on_new_config(id2, ESP_VALUE_TYPE_KEYS.GYRO_Z.value,"M")
-        self.on_new_config(id3, ESP_VALUE_TYPE_KEYS.GYRO_X.value,"S")
-
-        '''for temp in self.ESP_CHANNELS.values():
-            if temp.channel_type == ESP_CHANNEL_TYPE.AGGREGATIONE_VALUE:
-                temp1= temp.insensor_values.values()
-                for rv in temp1:
-                    print(rv.current_value)
-            else:
-                temp1= temp.esp_value.current_value
-                print(temp1)
-        '''
-        msg_to_send=self.send_sensor_signals()
-        print(msg_to_send)
-        
-    
-    def on_new_config(self, id, esp_value_key, type):
-        if(type=="S"):
-            self.add_inSensor_value_single(id, self.INSENSOR_CHANNELS[esp_value_key])
-        elif type=="M":
-            self.add_inSensor_value_multi(id, self.INSENSOR_CHANNELS[esp_value_key])               
-    
-    def add_inSensor_value_single(self, id, serial_value):
-   
-        temp_insensor_channel = PassThroughChannel(id, serial_value)
-        self.ESP_CHANNELS[id] = temp_insensor_channel
-
-    def add_inSensor_value_multi(self, id, new_esp_value):
-        
-        if id not in self.ESP_CHANNELS:
-            temp_insensor_channel = AggregateChannel(id)
-            self.ESP_CHANNELS[id] = temp_insensor_channel
-
-        self.ESP_CHANNELS[id].add_esp_value(new_esp_value)
-
 
     

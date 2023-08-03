@@ -2,6 +2,7 @@
 import os
 
 from classes.control import Control
+from classes.sensing import Sensing
 from configs.robots.dof import DofName
 from configs.robots.robots import siid
 
@@ -31,6 +32,7 @@ robot = siid.siid
 
 # -- this is the MAIN CLASS, the one handling all the logic
 control = Control(robot, path_to_restart)
+sensing= Sensing(robot, path_to_restart)
 
 
 def add_esp_channels():

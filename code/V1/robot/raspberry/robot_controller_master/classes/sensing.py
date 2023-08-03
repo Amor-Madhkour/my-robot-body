@@ -1,7 +1,6 @@
 
 import time
 from subprocess import call
-from classes.raw_value import RawValue
 from classes.serial_channel import SerialChannel
 from classes.networking_channel import NetworkingChannel
 from classes.esp_channel import SingleValueEspChannel, MultiValueEspChannel
@@ -188,11 +187,11 @@ class Sensing:
 
         for temp in self.ESP_CHANNELS.values():
             if temp.channel_type == ESP_CHANNEL_TYPE.AGGREGATIONE_VALUE:
-                temp1= temp.esp_values.values()
+                temp1= temp.insensor_values.values()
                 for rv in temp1:
                     print(rv.current_value)
             else:
-                temp1= temp.esp_value.current_value
+                temp1= temp.esp_value
                 print(temp1)
         
     

@@ -48,9 +48,9 @@ class Control:
         # it's a STRING-SERIALCHANNEL dict, where the STRING is the SERIAL PORT of that channel
         self.SERIAL_CHANNELS = dict()
 
-        for serial_port in set(self.ROBOT.dof_name_to_serial_port_dict.values()):
-            if serial_port not in self.SERIAL_CHANNELS:
-                self.SERIAL_CHANNELS[serial_port] = SerialChannel(serial_port)
+        #for serial_port in set(self.ROBOT.dof_name_to_serial_port_dict.values()):
+        #    if serial_port not in self.SERIAL_CHANNELS:
+        #        self.SERIAL_CHANNELS[serial_port] = SerialChannel(serial_port)
                # print(f"[CONTROLS][on_new_config_rcv] '{self.SERIAL_CHANNELS}'")
 
         self.last_serial_time = time.time()
@@ -95,10 +95,10 @@ class Control:
 
             # 0.
             dof = None
-            for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
-                if temp_dof.value.key == dof_key:
-                    dof = temp_dof
-                    break
+          # for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+          #      if temp_dof.value.key == dof_key:
+           #         dof = temp_dof
+           #         break
             if dof is None:
                 print(f"[CONTROLS][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
                       f"INVALID DOF - DOF NOT PRESENT IN ROBOT CONFIG")

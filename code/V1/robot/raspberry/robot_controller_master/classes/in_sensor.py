@@ -6,11 +6,11 @@ from configs.esps.esp_types import ESP_CHANNEL_TYPE
 # class used to handle the relay of messages from hardware from serial
 class inSensor:
 
-    def __init__(self, serial):
+    def __init__(self,ip, serial=None):
 
         #self.serial_value = serial_value
         self.channel_type = None
-        self.serial = serial
+        self.ip = ip
 
     def on_esp_msg_rcv(self, string_msg):
         pass

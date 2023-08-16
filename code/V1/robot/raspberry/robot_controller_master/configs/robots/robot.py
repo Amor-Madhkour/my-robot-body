@@ -8,16 +8,14 @@
 #    --- the DOFNAME is the DOF, while the STRING is the SERIAL PORT for that DOF.
 
 class Robot:
-    def __init__(self, name, ip, dofs):
+    def __init__(self, name, ip, dofs,dof_serial_mapping=None):
         self.robot_name = name
         self.ip = ip
-        self.dof_name_to_serial_port_dict = dofs
-
-    def __init__(self, name, ip, dofs,dof_serial_mapping):
-        self.robot_name = name
-        self.ip = ip
-        self.dof_name_to_serial_port_dict = dofs
-        self.serial_mapping_dict = dof_serial_mapping
+        if name=="room":
+            self.dof_name_esp_udp_dict = dofs
+            self.serial_mapping_dict = dof_serial_mapping
+        else:
+            self.dof_name_to_serial_port_dict = dofs
 
     def has_dof(self, dof_key):
         # returns TRUE if there is a DOF with the corresponding input DOF_KEY

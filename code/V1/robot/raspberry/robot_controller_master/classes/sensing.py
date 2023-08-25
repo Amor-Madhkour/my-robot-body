@@ -54,6 +54,9 @@ class Sensing:
         #for serial_port in set(self.ROBOT.dof_name_to_serial_port_dict.values()):
          #   if serial_port not in self.SERIAL_CHANNELS:
          #       self.SERIAL_CHANNELS[serial_port] = SerialChannel(serial_port)
+
+        #TODO
+         #I can remove the EspEdpChannel and put only the valid ip inside the esp_udp_channels
         for esp_ip in set(self.ROBOT.dof_name_esp_udp_dict.values()):
              if esp_ip not in self.ESP_UDP_CHANNELS:
                  self.ESP_UDP_CHANNELS[esp_ip] = EspUdpChannel(esp_ip)
@@ -274,23 +277,7 @@ class Sensing:
 
 
 
-    def serial_communication(self):
-        # Raspberry and Arduino need to negotiate the HALF-DUPLEX serial channel.
-        # to do this, they each send a single full message to the other, one at a time:
-        # RASPBERRY is the "master": he's the first that can SEND; then, to send again, it must first have
-        # received; a timeout is set in place, so that it can send again
-        # even if a message hasn't been received for some time
-
-        # can perform a SERIAL ACTION only every 'self.last_serial_time' seconds (~10ms usually)
-        if time.time() - self.last_serial_time < DEFAULT_SERIAL_ELAPSED:
-            # print(".. NO SERIAL COMM ..")
-            self.write_serial()
-            return
-
-        # SEND, if it can
-        # print(" --- WRITE: ")
-        self.read_serial()
-        self.last_serial_time = time.time()
+ 
 
     def loop(self):
         # 1: try to get UPD messages until there are no more
@@ -306,7 +293,7 @@ class Sensing:
 
         # 2
         # print(f"------SERIAL COMM")
-        self.serial_communication()
+      
         # print("\n")
 
     # ------------------------------------------------------------------------------------------ UTILS

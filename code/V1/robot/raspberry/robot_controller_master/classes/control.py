@@ -95,10 +95,10 @@ class Control:
 
             # 0.
             dof = None
-          # for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
-          #      if temp_dof.value.key == dof_key:
-           #         dof = temp_dof
-           #         break
+            for temp_dof in self.ROBOT.dof_name_to_serial_port_dict:
+                if temp_dof.value.key == dof_key:
+                   dof = temp_dof
+                   break
             if dof is None:
                 print(f"[CONTROLS][on_new_config_rcv] - ip: '{ip}' - esp_value_key: '{esp_value_key}' - dof: '{dof}': "
                       f"INVALID DOF - DOF NOT PRESENT IN ROBOT CONFIG")

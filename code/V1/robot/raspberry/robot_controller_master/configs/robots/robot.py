@@ -14,6 +14,8 @@ class Robot:
         if name=="room":
             self.dof_name_esp_udp_dict = dofs
             self.serial_mapping_dict = dof_serial_mapping
+            self.dof_name_to_serial_port_dict = dofs
+
         else:
             self.dof_name_to_serial_port_dict = dofs
 

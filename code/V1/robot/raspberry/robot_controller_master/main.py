@@ -37,15 +37,15 @@ robot = room.room
 # -- this is the MAIN CLASS, the one handling all the logic
 #control = Control(robot, path_to_restart)
 sensing = Sensing(robot, path_to_restart)
-#control = Control(robot, path_to_restart)
+control = Control(robot, path_to_restart)
 
 def add_esp_channels():
 
     global control
     from configs.esps.esp_types import ESP_VALUE_TYPE_KEYS
     from configs.robots.dof import DofName
-  #  control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value, DofName.PETALS.value.key, True)
-   # control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value, DofName.EYE_X.value.key, True)
+    control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_X.value, DofName.PETALS.value.key, True)
+    control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value, DofName.EYE_X.value.key, True)
     #control.on_new_config_rcv(test_ip_1, ESP_VALUE_TYPE_KEYS.ANGLE_Z.value, DofName.LED.value.key, True)
     #control.on_new_config_rcv(test_ip_2, ESP_VALUE_TYPE_KEYS.ANGLE_X.value, DofName.PETALS.value.key, True)
     #control.on_new_config_rcv(test_ip_2, ESP_VALUE_TYPE_KEYS.ANGLE_Y.value, DofName.EYE_X.value.key, True)
@@ -78,11 +78,11 @@ def main_body():
        
         start_time = time.time()
         #every  5ms switch between control and sensing
-        while  (time.time() - start_time) < time_difference_sec:
+        while  (time.time() - start_time) <= time_difference_sec:
             # execute CONTROLLERS loop
             control.loop()
 
-        while  (time.time() - start_time) < (2 * time_difference_sec):
+        while  (time.time() - start_time) <= (2 * time_difference_sec) and (time.time() - start_time) > time_difference_sec:
              # execute SENSING loop
             sensing.loop()
 

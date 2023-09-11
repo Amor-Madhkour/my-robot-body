@@ -63,7 +63,7 @@ def setup():
     # SETUP STRING CONTROL OBJECT
     #control.setup()
     #sensing.setup()
-    print(sensing.send_sensor_signals())
+   # print(sensing.send_sensor_signals())
 
     print("[SETUP] --------------------------------------------- COMPLETE\n")
 
@@ -82,9 +82,9 @@ def main_body():
             # execute CONTROLLERS loop
             control.loop()
 
-        while  (time.time() - start_time) <= (2 * time_difference_sec) and (time.time() - start_time) > time_difference_sec:
+       # while  (time.time() - start_time) <= (2 * time_difference_sec) and (time.time() - start_time) > time_difference_sec:
              # execute SENSING loop
-            sensing.loop()
+         #   sensing.loop()
 
 
 def main():

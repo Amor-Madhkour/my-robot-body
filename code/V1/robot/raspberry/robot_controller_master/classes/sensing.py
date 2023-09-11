@@ -46,17 +46,9 @@ class Sensing:
             net_quit_msg: quit_program
         }
 
-        # -- SERIAL (with Arduino)
-        # there is ONE SERIAL CHANNEL for every Arduino on the Robot.
-        # it's a STRING-SERIALCHANNEL dict, where the STRING is the SERIAL PORT of that channel
-        self.SERIAL_CHANNELS = dict()
-        self.ESP_UDP_CHANNELS = dict()
-        #for serial_port in set(self.ROBOT.dof_name_to_serial_port_dict.values()):
-         #   if serial_port not in self.SERIAL_CHANNELS:
-         #       self.SERIAL_CHANNELS[serial_port] = SerialChannel(serial_port)
 
-        #TODO
-         #I can remove the EspEdpChannel and put only the valid ip inside the esp_udp_channels
+        self.ESP_UDP_CHANNELS = dict()
+        
         for esp_ip in set(self.ROBOT.dof_name_esp_udp_dict.values()):
              if esp_ip not in self.ESP_UDP_CHANNELS:
                  self.ESP_UDP_CHANNELS[esp_ip] = EspUdpChannel(esp_ip)
@@ -204,6 +196,7 @@ class Sensing:
 
                 # check if the message came from a VALID ESP CHANNEL
                 if sender_ip in self.ESP_UDP_CHANNELS:
+                    print(f"[sensing][get_esp_signals] - msg: '{string_msg}'")
                     self.parse_in_esp_signals(string_msg)
     
     def parse_in_esp_signals(self,string_msg):
@@ -214,9 +207,7 @@ class Sensing:
                 if in_sensor == msg.key:
                     self.INSENSOR_CHANNELS[msg.key].on_msg_received(msg.value)
                     print(f"[SENSING][parse_in_esp_signals] - msg: '{msg}'")
-                    break
-        
-        
+                    break       
        
 
 
@@ -227,41 +218,6 @@ class Sensing:
         for esp_channel in self.OUT_ESP_CHANNELS.values():
             esp_channel.write()
 
-    def read_serial(self):
-        # read all there is to read, if any
-        # update serial time only if something was read
-        for serial_channel in self.SERIAL_CHANNELS.values():
-            while True:
-                line = serial_channel.read_serial_non_blocking()
-                if line is not None:
-                    # print(line)
-                    pass
-                else:
-                    break
-
-   
-    def get_serial_signals(self):
-        # try to get an UDP message
-        # read_udp_blocking() has been set to NON-BLOCKING during initialization.
-        # if there is no message to read, the method will return FALSE.
-
-        # UDP: wait for a new message, and get the sender port
-        #      the senders are the ESP. Check if the sender is a VALID ESP (one among the 'self.OUT_ESP_CHANNELS')
-        #      if it is, call the corresponding 'onMsgRcv' method to process the data accordingly
-        for serial_port, serial_channel in self.SERIAL_CHANNELS.items():
-
-            while True:
-                line = serial_channel.read_serial_non_blocking()
-                # check if the MSG is valid (None if 'decode' failed) and non-empty
-                if line is not None and line:
-                    print(f"[sensing][get_serial_signals] - msg: '{line}'")
-                    all_key_val_msgs = parse_serial_message(line)
-                    if len(all_key_val_msgs)==1:
-                        self.add_raw_value_single(serial_port, all_key_val_msgs)
-                    elif len(all_key_val_msgs)>1:
-                        self.add_raw_value_multi(serial_port, all_key_val_msgs)
-                    else:
-                        print(f" '{serial_port}' INVALID CHANNEL TYPE")
 
 
     def send_sensor_signals(self):  
@@ -275,9 +231,6 @@ class Sensing:
         return msg_to_send
 
 
-
-
- 
 
     def loop(self):
         # 1: try to get UPD messages until there are no more
